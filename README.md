@@ -1,4 +1,4 @@
-AD_ByLee
+SST-Inverter_ByLee
 ========
 
 Developing DSP project
