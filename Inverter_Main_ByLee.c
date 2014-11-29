@@ -30,7 +30,11 @@
 //#define Dly V_Dly*fk*20.0/360.0    //需要延迟的点数
 #define V_ACTRA 0x0666    //低有效0x0999.高有效则为0x0666
 #define V_T1CON 0x0942    //定时器T1时钟脉冲：37.5MHz,连续增/减模式0942;连续增模式1142
-#define V_DBTCONA 0x0AEC  //设置死区；设0x0AEC时，死区时间为4.27us
+//0x0942=0000 1001 0100 0010
+//
+#define V_DBTCONA 0x0AF4  //设置死区；
+//0x0AF0=(1010)_(111)(1_00)(00),
+//B1010=10,死区定时器周期；B111，死区定时器123使能;B100,预定标因子16；死区时间us=周期10/（37.5/16预定标）= 4.27us
 #define Tk 1.0/fk/1000
 
 //定向
@@ -181,7 +185,7 @@ void main(void)
 	EvaRegs.GPTCONA.all=0;
 	
 //设置通用目的定时器1的周期;
-	EvaRegs.T1PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz,)(0x0200, 周期512)
+	EvaRegs.T1PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
 	//EvaRegs.T1CMPR=0x0000;		
 	
 //使能通用目的定时器1的周期中断
@@ -191,7 +195,7 @@ void main(void)
 	
 //清除通用目的定时器1的计数器值
 	EvaRegs.T1CNT=0x0000;
-	EvaRegs.T1CON.all=V_T1CON;  //0x0942,
+	EvaRegs.T1CON.all=0x0942;  //0x0942,
 	EvaRegs.ACTRA.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
 	EvaRegs.DBTCONA.all = V_DBTCONA;   //设置死区
 	EvaRegs.COMCONA.all = 0xA600;     //0xA600,时间4.27us
@@ -276,15 +280,19 @@ void main(void)
 				
 
 				/**设定占空比（比较中断）**/
-				EvaRegs.CMPR1=Ua_pwm*EvaRegs.T1PR;
-				EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
-				EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
+				//EvaRegs.CMPR1=Ua_pwm*EvaRegs.T1PR;
+				//EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
+				//EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
 				
 				
 				/**开环控制**/
-//				EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
-//				EvaRegs.CMPR2=0.5*EvaRegs.T1PR;
-//				EvaRegs.CMPR3=0.5*EvaRegs.T1PR;
+				EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
+				EvaRegs.CMPR2=0.5*EvaRegs.T1PR;
+				EvaRegs.CMPR3=0.5*EvaRegs.T1PR;
+				
+				//EvaRegs.CMPR1=ip.sina*EvaRegs.T1PR;
+				//EvaRegs.CMPR2=ip.sinb*EvaRegs.T1PR;
+				//EvaRegs.CMPR3=ip.sinc*EvaRegs.T1PR;
 			}
 			AD.ADCFlag.bit.ADCSampleFlag=0;
 		}
@@ -300,13 +308,12 @@ interrupt void ADC_T1TOADC_isr(void)
 		EvaRegs.EVAIFRA .all =BIT7;
 	}//当数据处理时间大于采样间隔时间，则会数据未处理完成时发生中断，继续进行标志位置位以便之后继续中断
     if(ADflag==1) {
-//		DAC.DACPro(&DAC);
 		ADflag=0;
 		
 		*AD_CONVST=0;
 		EvaRegs.EVAIMRA.bit.T1PINT=1;  //
 		EvaRegs.EVAIFRA .all =BIT7;    //
-		//EvaRegs.EVAIFRA.bit.T1PINT=1;
+		//EvaRegs.EVAIFRA.bit.T1PINT=1;//效果与EvaRegs.EVAIFRA .all =BIT7语句相同
 		//PieCtrlRegs.PIEACK .all =PIEACK_GROUP2;
 	} 
 
