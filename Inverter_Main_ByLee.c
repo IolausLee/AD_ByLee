@@ -49,7 +49,7 @@
 #define PI_OutMax 300
 #define PI_OutMin -300
 
-#define Ud_Ref 3.11
+#define Ud_Ref 5
 #define Uq_Ref 0
 
 //Uint16 EVAInterruptCount;
@@ -107,6 +107,20 @@ PI_Ctrl PI_d={
 				0.0   		// Output: PID output PID输出
 				};
 PI_Ctrl PI_q={
+				//4.0,			// Parameter: Proportional gain  
+				//150.0,			// Parameter: Integral gain  
+				//Uq_Ref,   		// Input: Reference input 
+				//0.0,   		// Input: Feedback input 
+				0.0,			// Variable: Error   
+				0.0,			// Variable: Proportional output  
+				0.0,			// Variable: Integral output  
+				0.0,		// Variable: Pre-saturated output 
+				//PI_OutMax,		// Parameter: Maximum output 
+				//PI_OutMin,		// Parameter: Minimum output 
+				0.0   		// Output: PID output 
+				};
+				
+PI_Ctrl PI_default={
 				//4.0,			// Parameter: Proportional gain  
 				//150.0,			// Parameter: Integral gain  
 				//Uq_Ref,   		// Input: Reference input 
@@ -265,6 +279,12 @@ void main(void)
 				EvaRegs.CMPR1=Ua_pwm*EvaRegs.T1PR;
 				EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
 				EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
+				
+				
+				/**开环控制**/
+//				EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
+//				EvaRegs.CMPR2=0.5*EvaRegs.T1PR;
+//				EvaRegs.CMPR3=0.5*EvaRegs.T1PR;
 			}
 			AD.ADCFlag.bit.ADCSampleFlag=0;
 		}
@@ -278,7 +298,7 @@ interrupt void ADC_T1TOADC_isr(void)
 		*AD_CONVST=0;
 		EvaRegs.EVAIMRA.bit.T1PINT=1;
 		EvaRegs.EVAIFRA .all =BIT7;
-	}//数据未处理完成时发生中断，继续进行标志位置位以便之后继续中断
+	}//当数据处理时间大于采样间隔时间，则会数据未处理完成时发生中断，继续进行标志位置位以便之后继续中断
     if(ADflag==1) {
 //		DAC.DACPro(&DAC);
 		ADflag=0;
@@ -349,12 +369,15 @@ void ADCSmplePro(ADC_DRV *v)
 
 		U2_offset=U2+U2_offset;//计算当前实际偏移值
 		U2_offset_temp+=U2_offset;//累计偏移值
-		U2_offset=U2_offset_temp/(x+1);//计算下次估计偏移值
+		U2_offset=U2_offset_temp/(x+1);//估算下次估计偏移值
 
 		//if(U2_offset>20) while(1);
 
-		if(x==50) //计算50次后停止校正
+		if(x==50) {//计算50次后停止校正
 			AD_corrention_flag=0;
+			//PI_d=PI_default;
+			//PI_q=PI_default;
+		}
 	}
 
 /******************Fo*******************/

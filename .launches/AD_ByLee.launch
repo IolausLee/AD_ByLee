@@ -15,7 +15,7 @@
 <stringAttribute key="CCEDebugOptions.TARGET_CONFIGURATION_OPTION" value="full"/>
 <stringAttribute key="org.eclipse.cdt.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList/&gt;&#13;&#10;"/>
 <stringAttribute key="com.ti.ccstudio.debug.core.MRU_PROGRAM_NAME" value="C:\Users\ACIP-Lee\Documents\workspace\AD_ByLee\Debug\AD_ByLee.out"/>
-<stringAttribute key="com.ti.ccstudio.debug.core.MRU_MODULES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;modules&gt;&#13;&#10;&lt;module name=&quot;C:\Users\ACIP-Lee\Documents\workspace\AD_ByLee\Debug\AD_ByLee.out&quot; time=&quot;Thu Nov 27 20:46:18 CST 2014&quot; time_long=&quot;1417092378883&quot;/&gt;&#13;&#10;&lt;/modules&gt;&#13;&#10;"/>
+<stringAttribute key="com.ti.ccstudio.debug.core.MRU_MODULES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;modules&gt;&#13;&#10;&lt;module name=&quot;C:\Users\ACIP-Lee\Documents\workspace\AD_ByLee\Debug\AD_ByLee.out&quot; time=&quot;Fri Nov 28 21:45:12 CST 2014&quot; time_long=&quot;1417182312245&quot;/&gt;&#13;&#10;&lt;/modules&gt;&#13;&#10;"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="AD_ByLee"/>
 <stringAttribute key="CCEDebugOptions.CPU_NAME" value="Texas Instruments XDS100v2 USB Emulator_0/C28xx"/>
 <stringAttribute key="org.eclipse.cdt.launch.GLOBAL_VARIABLES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;globalVariableList/&gt;&#13;&#10;"/>
