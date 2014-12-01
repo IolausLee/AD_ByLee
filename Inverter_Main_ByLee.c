@@ -23,7 +23,7 @@
 
 
 //采样频率和延迟点数
-#define fk 7.0               //采样频率,单位为kHz
+#define fk 6.0               //采样频率,单位为kHz
 //#define V_Dly 90.0              //延迟90°
 #define V_T1PR 37.5*1000.0/2.0/fk   //连续增/减模式37.5*1000/2.0/fk；连续增模式37.5*1000/fk-1
 //#define Dot fk*20.0          //一个周期的点数,0.02/Ts
@@ -33,8 +33,8 @@
 //0x0942=0000 1001 0100 0010
 //
 #define V_DBTCONA 0x0AF4  //设置死区；
-//0x0AF0=(1010)_(111)(1_00)(00),
-//B1010=10,死区定时器周期；B111，死区定时器123使能;B100,预定标因子16；死区时间us=周期10/（37.5/16预定标）= 4.27us
+//0x0AF4=(1010)_(111)(1_01)(00),
+//B1010=10,死区定时器周期；B111，死区定时器123使能;B101,预定标因子5；死区时间us=周期10*2^5/75MHz= 4.27us
 #define Tk 1.0/fk/1000
 
 //定向
@@ -195,7 +195,16 @@ void main(void)
 	
 //清除通用目的定时器1的计数器值
 	EvaRegs.T1CNT=0x0000;
+
+/**************T1CON设置*******************/
 	EvaRegs.T1CON.all=0x0942;  //0x0942,
+//	EvaRegs.T1CON.bit.TMODE=1;
+//	EvaRegs.T1CON.bit.TPS=1;
+//	EvaRegs.T1CON.bit.TENABLE=0;
+//	EvaRegs.T1CON.bit.TCLKS10=0;
+//	EvaRegs.T1CON.bit.TECMPR=1;
+/**********************************/
+	
 	EvaRegs.ACTRA.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
 	EvaRegs.DBTCONA.all = V_DBTCONA;   //设置死区
 	EvaRegs.COMCONA.all = 0xA600;     //0xA600,时间4.27us
