@@ -32,9 +32,11 @@
 #define V_T1CON 0x0942    //定时器T1时钟脉冲：37.5MHz,连续增/减模式0942;连续增模式1142
 //0x0942=0000 1001 0100 0010
 //
-#define V_DBTCONA 0x0AF4  //设置死区；
+#define V_DBTCONA 0x0FF4  //设置死区；
+
 //0x0AF4=(1010)_(111)(1_01)(00),
 //B1010=10,死区定时器周期；B111，死区定时器123使能;B101,预定标因子5；死区时间us=周期10*2^5/75MHz= 4.27us
+//0xFF4:6.4us
 #define Tk 1.0/fk/1000
 
 //定向
@@ -53,7 +55,7 @@
 #define PI_OutMax 300
 #define PI_OutMin -300
 
-#define Ud_Ref 5
+#define Ud_Ref 2.88
 #define Uq_Ref 0
 
 //Uint16 EVAInterruptCount;
@@ -90,7 +92,7 @@ void pi_calc(PI_Ctrl *p,float Ref,float Feedback);
 //DAC_DRV DAC=DAC_DRV_DEFAULTS;
 ADC_DRV AD=ADC_DRV_DEFAULTS;
 inverter_pll ip;
-PLL pll;
+PLL pll,pll_2;
 line2phase l2p;
 CLARKE c,c2;
 PARK p;
@@ -186,6 +188,7 @@ void main(void)
 	
 //设置通用目的定时器1的周期;
 	EvaRegs.T1PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
+	//EvbRegs.T3PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
 	//EvaRegs.T1CMPR=0x0000;		
 	
 //使能通用目的定时器1的周期中断
@@ -193,11 +196,19 @@ void main(void)
 	EvaRegs.EVAIMRA.bit.T1PINT=1;	
 	EvaRegs.EVAIFRA.bit.T1PINT=1; 
 	
+	//EvbRegs.EVBIMRA.bit.T3PINT=1;	
+	//EvbRegs.EVBIFRA.bit.T3PINT=1; 
+	
 //清除通用目的定时器1的计数器值
 	EvaRegs.T1CNT=0x0000;
+	
+	//EvbRegs.T3CNT=0x0000;
 
 /**************T1CON设置*******************/
 	EvaRegs.T1CON.all=0x0942;  //0x0942,
+	
+	//EvbRegs.T3CON.all=0x0942;  //0x0942
+	
 //	EvaRegs.T1CON.bit.TMODE=1;
 //	EvaRegs.T1CON.bit.TPS=1;
 //	EvaRegs.T1CON.bit.TENABLE=0;
@@ -208,6 +219,10 @@ void main(void)
 	EvaRegs.ACTRA.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
 	EvaRegs.DBTCONA.all = V_DBTCONA;   //设置死区
 	EvaRegs.COMCONA.all = 0xA600;     //0xA600,时间4.27us
+	
+	//EvbRegs.ACTRB.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
+	//EvbRegs.DBTCONB.all = V_DBTCONA;   //设置死区
+	//EvbRegs.COMCONB.all = 0xA600;     //0xA600,时间4.27us
 
 	
 //当通用目的定时器1产生中断时启动ADC变换
@@ -264,9 +279,12 @@ void main(void)
 				
 //int clarke_calc(CLARKE *c,float As,float Bs,float Cs)		
 				clarke_calc(&c,l2p.Ua,l2p.Ub,l2p.Uc);//
+				
+//int pll_calc(pll *p,float Alpha,float Beta)
+				pll_calc(&pll_2,c.Alpha,c.Beta);
 
 //int park_calc(PARK *p,float Alpha,float Beta,float sina,float cosa)
-				park_calc(&p,c.Alpha,c.Beta,pll.sin,pll.cos);//
+				park_calc(&p,c.Alpha,c.Beta,pll_2.sin,pll_2.cos);//
 				
 //void pi_calc(PI_Ctrl *p,float Ref,float Feedback) 
 				pi_calc(&PI_d,Ud_Ref,p.Ds);//
@@ -289,15 +307,19 @@ void main(void)
 				
 
 				/**设定占空比（比较中断）**/
-				//EvaRegs.CMPR1=Ua_pwm*EvaRegs.T1PR;
-				//EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
-				//EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
+				EvaRegs.CMPR1=Ua_pwm*EvaRegs.T1PR;
+				EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
+				EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
 				
 				
 				/**开环控制**/
-				EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
-				EvaRegs.CMPR2=0.5*EvaRegs.T1PR;
-				EvaRegs.CMPR3=0.5*EvaRegs.T1PR;
+				//EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
+				//EvaRegs.CMPR2=0.5*EvaRegs.T1PR;
+				//EvaRegs.CMPR3=0.5*EvaRegs.T1PR;
+				
+				//EvbRegs.CMPR4=0.5*EvbRegs.T3PR;
+				//EvbRegs.CMPR5=0.5*EvbRegs.T3PR;
+				//EvbRegs.CMPR6=0.5*EvbRegs.T3PR;
 				
 				//EvaRegs.CMPR1=ip.sina*EvaRegs.T1PR;
 				//EvaRegs.CMPR2=ip.sinb*EvaRegs.T1PR;
