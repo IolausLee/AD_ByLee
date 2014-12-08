@@ -278,7 +278,8 @@ void main(void)
 				
 				
 //int clarke_calc(CLARKE *c,float As,float Bs,float Cs)		
-				clarke_calc(&c,l2p.Ua,l2p.Ub,l2p.Uc);//
+				//clarke_calc(&c,l2p.Ua,l2p.Ub,l2p.Uc);//
+				clarke_calc(&c,l2p.Ua,l2p.Ub);
 				
 //int pll_calc(pll *p,float Alpha,float Beta)
 				pll_calc(&pll_2,c.Alpha,c.Beta);
@@ -488,7 +489,8 @@ void inverter_pll_calc(void)
 	if(ip.sinc > 0.9999)
 		ip.sinc=0.9999;
 //int clarke_calc(CLARKE *c,float As,float Bs,float Cs)
-	clarke_calc(&c2,ip.sina,ip.sinb,ip.sinc);
+	//clarke_calc(&c2,ip.sina,ip.sinb,ip.sinc);
+	clarke_calc(&c2,ip.sina,ip.sinb);
 //int pll_calc(pll *p,float Alpha,float Beta)
 	pll_calc(&pll,c2.Alpha,c2.Beta);
 

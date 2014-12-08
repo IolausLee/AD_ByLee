@@ -37,15 +37,16 @@ typedef struct CLARKE_TYPEDEF
 	float32 Beta;  // Output: stationary q-axis stator variable 
 } CLARKE;
 
-int clarke_calc(CLARKE *c,float As,float Bs,float Cs)
+//void int clarke_calc(CLARKE *c,float As,float Bs,float Cs)
+void clarke_calc(CLARKE *c,float As,float Bs)
 { 
-	//c->Alpha = As;//三相平衡下可用
-	//c->Beta = (As + 2*Bs)*0.57735026918963;  //1/sqrt(3) = 0.57735026918963 
+	c->Alpha = As;//三相平衡下可用
+	c->Beta = (As + 2*Bs)*0.57735026918963;  //1/sqrt(3) = 0.57735026918963 
 
-	c->Alpha=0.66666*As-0.33333*(Bs+Cs);
-	c->Beta=0.57735*(Bs-Cs);
+	//c->Alpha=0.66666*As-0.33333*(Bs+Cs);
+	//c->Beta=0.57735*(Bs-Cs);
 
-	return 0; 
+	//return 0; 
 } 
 
 
@@ -77,12 +78,12 @@ typedef struct PARK_TYPEDEF
 	float32 Qs;  // Output: rotating q-axis stator variable 
 } PARK;
 
-int park_calc(PARK *p,float Alpha,float Beta,float sina,float cosa)
+void park_calc(PARK *p,float Alpha,float Beta,float sina,float cosa)
 {  
 	p->Ds = Alpha * cosa + Beta * sina;
 	p->Qs = Beta * cosa - Alpha * sina;
 
-	return 0;
+	//return 0;
 } 
 
 typedef struct ANTIPARK_TYPEDEF
