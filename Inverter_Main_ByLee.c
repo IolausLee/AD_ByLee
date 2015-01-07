@@ -18,6 +18,7 @@
 //传感器参数
 #define Ku 151.11		//LV25_P电压传感器放大倍数。当限流电阻为110kΩ，测量电阻270Ω
 #define Kcur 6.67		//用LA55-P/SP50电流传感器，测量电阻为150Ω
+//#define Kcur 0.16667		//用LA55-P/SP50电流传感器，测量电阻为1.2kΩ,安匝数为5
 #define Res 0.000305	//AD芯片的分辨率
 #define U_max 20        //继保动作电压
 
@@ -55,7 +56,7 @@
 #define PI_OutMax 300
 #define PI_OutMin -300
 
-#define Ud_Ref 2.88
+#define Ud_Ref 2.88675
 #define Uq_Ref 0
 
 //Uint16 EVAInterruptCount;
@@ -76,8 +77,11 @@ unsigned int cnt=0;//
 float sample_time=Tk;
 
 float U1,U2;
+//float I1,I2;
 float U1_offset=0,U2_offset=0;
+//float I1_offset=0,I2_offset=0;
 float U1_offset_temp=0,U2_offset_temp=0;
+//float I1_offset_temp=0,I2_offset_temp=0;
 float Ua_pwm,Ub_pwm,Uc_pwm;
 
 interrupt void ADC_T1TOADC_isr(void);
@@ -92,10 +96,10 @@ void pi_calc(PI_Ctrl *p,float Ref,float Feedback);
 //DAC_DRV DAC=DAC_DRV_DEFAULTS;
 ADC_DRV AD=ADC_DRV_DEFAULTS;
 inverter_pll ip;
-PLL pll,pll_2;
+PLL pll,pll_2,pll_I;
 line2phase l2p;
-CLARKE c,c2;
-PARK p;
+CLARKE c,c2,c_I;
+PARK p,p_I;
 ANTICLARKE ac;
 ANTIPARK ap;
 
@@ -188,7 +192,8 @@ void main(void)
 	
 //设置通用目的定时器1的周期;
 	EvaRegs.T1PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
-	//EvbRegs.T3PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
+	
+	EvbRegs.T3PR=V_T1PR;     //(0x0823,9kHz)(0x1D4B,5kHz)
 	//EvaRegs.T1CMPR=0x0000;		
 	
 //使能通用目的定时器1的周期中断
@@ -196,33 +201,28 @@ void main(void)
 	EvaRegs.EVAIMRA.bit.T1PINT=1;	
 	EvaRegs.EVAIFRA.bit.T1PINT=1; 
 	
-	//EvbRegs.EVBIMRA.bit.T3PINT=1;	
-	//EvbRegs.EVBIFRA.bit.T3PINT=1; 
+	EvbRegs.EVBIMRA.bit.T3PINT=1;	
+	EvbRegs.EVBIFRA.bit.T3PINT=1; 
 	
 //清除通用目的定时器1的计数器值
 	EvaRegs.T1CNT=0x0000;
 	
-	//EvbRegs.T3CNT=0x0000;
+	EvbRegs.T3CNT=0x0000;
 
 /**************T1CON设置*******************/
 	EvaRegs.T1CON.all=0x0942;  //0x0942,
 	
-	//EvbRegs.T3CON.all=0x0942;  //0x0942
+	EvbRegs.T3CON.all=0x0942;  //0x0942
 	
-//	EvaRegs.T1CON.bit.TMODE=1;
-//	EvaRegs.T1CON.bit.TPS=1;
-//	EvaRegs.T1CON.bit.TENABLE=0;
-//	EvaRegs.T1CON.bit.TCLKS10=0;
-//	EvaRegs.T1CON.bit.TECMPR=1;
 /**********************************/
 	
 	EvaRegs.ACTRA.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
 	EvaRegs.DBTCONA.all = V_DBTCONA;   //设置死区
 	EvaRegs.COMCONA.all = 0xA600;     //0xA600,时间4.27us
 	
-	//EvbRegs.ACTRB.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
-	//EvbRegs.DBTCONB.all = V_DBTCONA;   //设置死区
-	//EvbRegs.COMCONB.all = 0xA600;     //0xA600,时间4.27us
+	EvbRegs.ACTRB.all = V_ACTRA;    //低有效0x0999.高有效则为0x0666
+	EvbRegs.DBTCONB.all = V_DBTCONA;   //设置死区
+	EvbRegs.COMCONB.all = 0xA600;     //0xA600,时间4.27us
 
 	
 //当通用目的定时器1产生中断时启动ADC变换
@@ -274,18 +274,23 @@ void main(void)
 				
 				
 				/**采样完成后开始数据处理**/
-				inverter_pll_calc();//计算相位
+				//inverter_pll_calc();//计算相位
 				
 				
 //int clarke_calc(CLARKE *c,float As,float Bs,float Cs)		
 				//clarke_calc(&c,l2p.Ua,l2p.Ub,l2p.Uc);//
 				clarke_calc(&c,l2p.Ua,l2p.Ub);
+				//clarke_calc(&c_I,I1,I2);
+				
 				
 //int pll_calc(pll *p,float Alpha,float Beta)
 				pll_calc(&pll_2,c.Alpha,c.Beta);
+				//pll_calc(&pll_I,c_I.Alpha,c_I.Beta);
+				
 
 //int park_calc(PARK *p,float Alpha,float Beta,float sina,float cosa)
 				park_calc(&p,c.Alpha,c.Beta,pll_2.sin,pll_2.cos);//
+				//park_calc(&p_I,c_I.Alpha,c_I.Beta,pll_I.sin,pll_I.cos);//
 				
 //void pi_calc(PI_Ctrl *p,float Ref,float Feedback) 
 				pi_calc(&PI_d,Ud_Ref,p.Ds);//
@@ -312,6 +317,10 @@ void main(void)
 				EvaRegs.CMPR2=Ub_pwm*EvaRegs.T1PR;
 				EvaRegs.CMPR3=Uc_pwm*EvaRegs.T1PR;
 				
+				EvbRegs.CMPR4=Ua_pwm*EvbRegs.T3PR;
+				EvbRegs.CMPR5=Ub_pwm*EvbRegs.T3PR;
+				EvbRegs.CMPR6=Uc_pwm*EvbRegs.T3PR;
+				
 				
 				/**开环控制**/
 				//EvaRegs.CMPR1=0.5*EvaRegs.T1PR;
@@ -334,6 +343,7 @@ void main(void)
 interrupt void ADC_T1TOADC_isr(void)  
 {
 	//tint++;
+	
 	if(ADflag==0) {
 		*AD_CONVST=0;
 		EvaRegs.EVAIMRA.bit.T1PINT=1;
@@ -353,6 +363,8 @@ interrupt void ADC_T1TOADC_isr(void)
 	//EvaRegs.EVAIFRA .all =BIT7;    //
 	
 	PieCtrlRegs.PIEACK .all =PIEACK_GROUP2;  //
+	
+	inverter_pll_calc();//计算相位
 	//return;
 }
 
@@ -397,6 +409,9 @@ void ADCSmplePro(ADC_DRV *v)
 
 	U1=(signed int)v->ADSampleResult0[x]*Ku*Res-U1_offset;	
 	U2=(signed int)v->ADSampleResult1[x]*Ku*Res-U2_offset;
+	
+	//I1=(signed int)v->ADSampleResult2[x]*Kcur*Res-I1_offset;	
+	//I2=(signed int)v->ADSampleResult3[x]*Kcur*Res-I2_offset;
 
 	if(AD_corrention_flag==1) {
 		
@@ -409,6 +424,16 @@ void ADCSmplePro(ADC_DRV *v)
 		U2_offset=U2+U2_offset;//计算当前实际偏移值
 		U2_offset_temp+=U2_offset;//累计偏移值
 		U2_offset=U2_offset_temp/(x+1);//估算下次估计偏移值
+		
+//		I1_offset=I1+I1_offset;//计算当前实际偏移值
+//		I1_offset_temp+=I1_offset;//累计偏移值
+//		I1_offset=I1_offset_temp/(x+1);//计算下次估计偏移值
+
+		//if(U1_offset>20) while(1);
+
+//		I2_offset=I2+I2_offset;//计算当前实际偏移值
+//		I2_offset_temp+=I2_offset;//累计偏移值
+//		I2_offset=I2_offset_temp/(x+1);//估算下次估计偏移值
 
 		//if(U2_offset>20) while(1);
 
@@ -439,7 +464,7 @@ void ADCSmplePro(ADC_DRV *v)
 
 /******Graphic*******/
 	//Temp=U1;
-	temp1[x]=U1;
+	//temp1[x]=I1;
 	//temp2[x]=l2p.Ubc;
 /******Graphic End*******/
 
